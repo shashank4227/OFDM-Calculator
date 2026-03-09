@@ -75,7 +75,7 @@ function App() {
   return (
     <div className="app-container">
       <header>
-        <h1><Wifi size={36} style={{ display: 'inline', marginRight: '10px', verticalAlign: 'middle', color: '#3b82f6' }}/>OFDM Calculator</h1>
+        <h1><Wifi size={36} style={{ display: 'inline', marginRight: '10px', verticalAlign: 'middle', color: '#3b82f6' }}/>OFDM Link Budget</h1>
         <p className="subtitle">5G NR & LTE Subframe Parameters Optimizer</p>
       </header>
 
