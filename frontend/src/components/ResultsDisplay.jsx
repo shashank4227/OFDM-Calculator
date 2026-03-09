@@ -165,7 +165,7 @@ const ResultsDisplay = ({ results }) => {
         </div>
         <div className="explanation-row">
           <span>TCP (Max Delay Spread):</span>
-          <span>{results.derivedParams?.cpSizeSamples} samples / {(results.baseParams?.samplingRate / 1000000).toFixed(2)} MHz = {(results.cpDurationUs)?.toFixed(2) || '0.00'} µs</span>
+          <span>{results.derivedParams?.cpSizeSamples} samples / {(results.baseParams?.samplingRate / 1000000).toFixed(2)} MHz = {(tcpSec * 1e6).toFixed(2)} µs</span>
         </div>
         <div className="explanation-row" style={{ fontWeight: '600', color: '#f8fafc' }}>
           <span>Throughput:</span>
