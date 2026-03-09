@@ -1,4 +1,5 @@
 import React from 'react';
+import SubcarrierDiagram from './SubcarrierDiagram';
 
 const ResultsDisplay = ({ results }) => {
   if (!results) {
@@ -10,8 +11,35 @@ const ResultsDisplay = ({ results }) => {
     );
   }
 
+  const tcpSec = results.derivedParams?.cpSizeSamples / results.baseParams?.samplingRate;
+  const maxDelaySpreadSec = results.delaySpread; // we set this to TCP in the backend
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+      {/* CP vs Delay Spread Alert */}
+      {results.derivedParams && results.delaySpread !== undefined && (
+        <div style={{
+          padding: '1rem',
+          borderRadius: '8px',
+          borderLeft: `4px solid #10b981`,
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          color: '#f8fafc',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          marginTop: '1rem'
+        }}>
+          <span style={{ fontSize: '1.25rem' }}>ℹ️</span>
+          <div>
+            <strong>Delay Spread: </strong>
+            To prevent Inter-Symbol Interference (ISI), the maximum delay spread of the channel allowed is equal to the TCP (Cyclic Prefix Time).
+            <div style={{ fontSize: '0.85rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
+              TCP (Max Delay Spread): {(tcpSec * 1e6).toFixed(2)} µs
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Derived Input Parameters */}
       {results.derivedParams && (
@@ -94,6 +122,8 @@ const ResultsDisplay = ({ results }) => {
           </div>
         </div>
         
+
+        
         <div className="result-card highlight" style={{ gridColumn: '1 / -1', background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.3)' }}>
           <span className="result-label" style={{ color: '#6ee7b7' }}>MAC Throughput (After FEC)</span>
           <div>
@@ -133,11 +163,17 @@ const ResultsDisplay = ({ results }) => {
           <span>Occupied Bandwidth:</span>
           <span>({results.derivedParams?.dataSubcarriers} + {results.derivedParams?.pilotSubcarriers} + {results.derivedParams?.dcSubcarriers}) Used SC × {(results.baseParams?.subcarrierSpacing / 1000).toFixed(0)} kHz = {results.occupiedBandwidthMHz?.toFixed(2) || '0.00'} MHz</span>
         </div>
+        <div className="explanation-row">
+          <span>TCP (Max Delay Spread):</span>
+          <span>{results.derivedParams?.cpSizeSamples} samples / {(results.baseParams?.samplingRate / 1000000).toFixed(2)} MHz = {(results.cpDurationUs)?.toFixed(2) || '0.00'} µs</span>
+        </div>
         <div className="explanation-row" style={{ fontWeight: '600', color: '#f8fafc' }}>
           <span>Throughput:</span>
           <span>{results.dataRateMbps.toFixed(2)} Mbps × {results.baseParams?.fecRate} FEC = {results.macThroughputMbps.toFixed(2)} Mbps</span>
         </div>
       </div>
+
+      <SubcarrierDiagram results={results} />
     </div>
   );
 };

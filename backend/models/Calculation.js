@@ -29,6 +29,7 @@ const calculationSchema = new mongoose.Schema({
     dataRateMbps: { type: Number, required: true },
     macThroughputMbps: { type: Number, required: true },
     occupiedBandwidthMHz: { type: Number, required: true },
+    delaySpread: { type: Number, required: true },
     derivedParams: { type: Object }
   },
   createdAt: { type: Date, default: Date.now }

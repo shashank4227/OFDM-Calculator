@@ -11,7 +11,7 @@ const defaultParams = {
   fecRate: 0.5
 };
 
-const CalculatorForm = ({ onCalculate, isLoading }) => {
+const CalculatorForm = ({ onCalculate, isLoading, onError }) => {
   const [params, setParams] = useState(defaultParams);
 
   const handleChange = (e) => {
@@ -26,7 +26,7 @@ const CalculatorForm = ({ onCalculate, isLoading }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (params.subcarrierSpacing >= params.samplingRate) {
-      alert("Subcarrier Spacing must be smaller than Sampling Rate.");
+      if (onError) onError("Subcarrier Spacing must be smaller than Sampling Rate.");
       return;
     }
     onCalculate(params);
@@ -54,7 +54,7 @@ const CalculatorForm = ({ onCalculate, isLoading }) => {
               color: 'var(--text-primary)' 
             }}
           >
-            {[4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192].map(size => (
+            {[64, 128, 256, 512, 1024, 2048, 4096, 8192].map(size => (
               <option key={size} value={size}>{size}</option>
             ))}
           </select>

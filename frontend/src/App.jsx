@@ -41,6 +41,11 @@ function App() {
       });
 
       if (!response.ok) {
+        if (response.status === 400) {
+          const errorData = await response.json();
+          setError(errorData.error || 'Invalid Input Parameters: Bad Request');
+          return;
+        }
         throw new Error('Calculation failed server-side');
       }
 
@@ -74,12 +79,10 @@ function App() {
         <p className="subtitle">5G NR & LTE Subframe Parameters Optimizer</p>
       </header>
 
-      {error && <div className="error-message">{error}</div>}
-
       <div className="dashboard-grid">
         <div className="glass-panel form-section">
           <h2><Database size={24} color="#3b82f6" /> Input Parameters</h2>
-          <CalculatorForm onCalculate={handleCalculate} isLoading={loading} />
+          <CalculatorForm onCalculate={handleCalculate} isLoading={loading} onError={setError} />
         </div>
 
         <div className="results-history-section" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -100,6 +103,73 @@ function App() {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div style={{
+          position: 'fixed',
+          top: '0', left: '0', right: '0', bottom: '0',
+          backgroundColor: 'rgba(15, 23, 42, 0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            backgroundColor: '#1e293b',
+            padding: '2rem',
+            borderRadius: '12px',
+            border: '1px solid #ef4444',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
+            maxWidth: '400px',
+            width: '90%',
+            textAlign: 'center',
+            position: 'relative'
+          }}>
+            <div style={{ color: '#ef4444', marginBottom: '1rem' }}>
+              <Activity size={48} style={{ margin: '0 auto' }} />
+            </div>
+            <h3 style={{ color: '#f8fafc', fontSize: '1.25rem', marginBottom: '0.5rem', fontWeight: 600 }}>Calculations Halted</h3>
+            <p style={{ color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              {error}
+            </p>
+            <button 
+              onClick={() => setError('')}
+              style={{
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#dc2626'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#ef4444'}
+            >
+              Acknowledge
+            </button>
+            <button
+               onClick={() => setError('')}
+               style={{
+                 position: 'absolute',
+                 top: '1rem',
+                 right: '1rem',
+                 background: 'transparent',
+                 border: 'none',
+                 color: '#64748b',
+                 cursor: 'pointer',
+                 fontSize: '1.25rem',
+                 padding: '4px'
+               }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

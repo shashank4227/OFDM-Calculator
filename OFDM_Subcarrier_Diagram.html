@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFDM Subcarrier Allocation</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f8fafc; margin: 0; }
+        .container { background-color: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        h2 { color: #1e293b; margin-top: 0; margin-bottom: 5px; }
+        p.subtitle { color: #64748b; margin-bottom: 30px; }
+        svg { overflow: visible; }
+        .legend-text { font-size: 14px; fill: #334155; }
+        .axis-label { font-size: 16px; font-weight: bold; fill: #1e293b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>OFDM Subcarrier Allocation</h2>
+    <p class="subtitle">Frequency Domain Representation</p>
+    <div id="svg-container"></div>
+</div>
+
+<script>
+    const svgNS = "http://www.w3.org/2000/svg";
+    const width = 860;
+    const height = 450;
+    const centerX = width / 2;
+    const baseY = 320;
+    
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", height);
+    
+    // defs for arrow
+    const defs = document.createElementNS(svgNS, "defs");
+    defs.innerHTML = `
+        <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1e293b" />
+        </marker>
+        <marker id="arrow-blue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+        </marker>
+        <marker id="arrow-green" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+        </marker>
+    `;
+    svg.appendChild(defs);
+
+    // Axes
+    const xAxis = document.createElementNS(svgNS, "line");
+    xAxis.setAttribute("x1", 40); xAxis.setAttribute("y1", baseY);
+    xAxis.setAttribute("x2", width - 40); xAxis.setAttribute("y2", baseY);
+    xAxis.setAttribute("stroke", "#1e293b"); xAxis.setAttribute("stroke-width", "2");
+    xAxis.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(xAxis);
+
+    const xLabel = document.createElementNS(svgNS, "text");
+    xLabel.setAttribute("x", width - 35); xLabel.setAttribute("y", baseY + 5);
+    xLabel.setAttribute("class", "axis-label");
+    xLabel.textContent = "Frequency";
+    svg.appendChild(xLabel);
+
+    const yAxis = document.createElementNS(svgNS, "line");
+    yAxis.setAttribute("x1", centerX); yAxis.setAttribute("y1", baseY);
+    yAxis.setAttribute("x2", centerX); yAxis.setAttribute("y2", 60);
+    yAxis.setAttribute("stroke", "#1e293b"); yAxis.setAttribute("stroke-width", "2");
+    yAxis.setAttribute("marker-end", "url(#arrow)");
+    svg.appendChild(yAxis);
+
+    const yLabel = document.createElementNS(svgNS, "text");
+    yLabel.setAttribute("x", centerX + 15); yLabel.setAttribute("y", 70);
+    yLabel.setAttribute("class", "axis-label");
+    yLabel.textContent = "Amplitude";
+    svg.appendChild(yLabel);
+
+    // Subcarriers
+    const spacing = 22;
+    const maxAmplitude = 180;
+    
+    const drawCarrier = (index, type) => {
+        const x = centerX + index * spacing;
+        let color, marker, strokeDasharray = "", heightCalc;
+        
+        switch(type) {
+            case 'data': color = "#10b981"; marker = "url(#arrow-green)"; heightCalc = maxAmplitude; break;
+            case 'pilot': color = "#3b82f6"; marker = "url(#arrow-blue)"; heightCalc = maxAmplitude + 15; break;
+            case 'null': color = "#94a3b8"; marker = ""; heightCalc = 30; strokeDasharray = "4,4"; break;
+            case 'dc': color = "#ef4444"; marker = ""; heightCalc = 0; break;
+        }
+
+        if (heightCalc > 0) {
+            const line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", x); line.setAttribute("y1", baseY);
+            line.setAttribute("x2", x); line.setAttribute("y2", baseY - heightCalc);
+            line.setAttribute("stroke", color); line.setAttribute("stroke-width", "3");
+            if (marker) line.setAttribute("marker-end", marker);
+            if (strokeDasharray) line.setAttribute("stroke-dasharray", strokeDasharray);
+            svg.appendChild(line);
+            
+            if (type === 'null') {
+                 const circle = document.createElementNS(svgNS, "circle");
+                 circle.setAttribute("cx", x); circle.setAttribute("cy", baseY - heightCalc);
+                 circle.setAttribute("r", "3"); circle.setAttribute("fill", color);
+                 svg.appendChild(circle);
+            }
+        } else if (type === 'dc') {
+            const circle = document.createElementNS(svgNS, "circle");
+            circle.setAttribute("cx", x); circle.setAttribute("cy", baseY);
+            circle.setAttribute("r", "6"); circle.setAttribute("fill", color);
+            svg.appendChild(circle);
+        }
+    };
+
+    // Draw Right Side (1 to 16)
+    for (let i = 1; i <= 16; i++) {
+        let type = 'data';
+        if (i >= 14) type = 'null';
+        else if (i % 4 === 0) type = 'pilot';
+        drawCarrier(i, type);
+    }
+    
+    // Draw Left Side (-16 to -1)
+    for (let i = -16; i <= -1; i++) {
+        let type = 'data';
+        if (i <= -14) type = 'null';
+        else if (Math.abs(i) % 4 === 0) type = 'pilot';
+        drawCarrier(i, type);
+    }
+
+    // Draw DC
+    drawCarrier(0, 'dc');
+    
+    // Add text labels
+    const addText = (text, x, y, color = "#1e293b", weight="normal", fs="12") => {
+        const txt = document.createElementNS(svgNS, "text");
+        txt.setAttribute("x", x); txt.setAttribute("y", y);
+        txt.setAttribute("font-size", fs); txt.setAttribute("fill", color);
+        txt.setAttribute("font-weight", weight);
+        txt.setAttribute("text-anchor", "middle");
+        txt.textContent = text;
+        svg.appendChild(txt);
+    };
+
+    addText("0", centerX, baseY + 20, "#ef4444", "bold", "14");
+    addText("DC", centerX, baseY + 38, "#ef4444", "bold", "14");
+    
+    addText("-N/2", centerX - 16 * spacing, baseY + 20, "#94a3b8", "bold");
+    addText("+N/2", centerX + 16 * spacing, baseY + 20, "#94a3b8", "bold");
+
+    // Group indicators
+    const drawBracket = (x1, x2, y, label) => {
+        const path = document.createElementNS(svgNS, "path");
+        const midX = (x1 + x2) / 2;
+        path.setAttribute("d", `M ${x1} ${y} L ${x1} ${y+10} L ${x2} ${y+10} L ${x2} ${y}`);
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", "#64748b");
+        path.setAttribute("stroke-width", "2");
+        svg.appendChild(path);
+        
+        addText(label, midX, y + 27, "#64748b", "bold");
+    };
+
+    drawBracket(centerX - 16 * spacing, centerX - spacing, baseY + 50, "Left Side Half");
+    drawBracket(centerX + spacing, centerX + 16 * spacing, baseY + 50, "Right Side Half");
+
+    // Legend
+    const legendX = 60;
+    const legendY = 40;
+    const legendItems = [
+        { label: "Data Carrier", color: "#10b981", type: "solid" },
+        { label: "Pilot Carrier", color: "#3b82f6", type: "solid" },
+        { label: "Null (Guard) Carrier", color: "#94a3b8", type: "dashed" },
+        { label: "DC Subcarrier (0)", color: "#ef4444", type: "dot" }
+    ];
+
+    const rect = document.createElementNS(svgNS, "rect");
+    rect.setAttribute("x", legendX - 10); rect.setAttribute("y", legendY - 15);
+    rect.setAttribute("width", 185); rect.setAttribute("height", 115);
+    rect.setAttribute("fill", "#ffffff"); rect.setAttribute("stroke", "#cbd5e1");
+    rect.setAttribute("rx", "5");
+    svg.appendChild(rect);
+
+    legendItems.forEach((item, index) => {
+        const y = legendY + index * 26;
+        if (item.type === "solid" || item.type === "dashed") {
+            const line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", legendX); line.setAttribute("y1", y);
+            line.setAttribute("x2", legendX + 20); line.setAttribute("y2", y);
+            line.setAttribute("stroke", item.color); line.setAttribute("stroke-width", "3");
+            if (item.type === "dashed") line.setAttribute("stroke-dasharray", "4,4");
+            svg.appendChild(line);
+        } else if (item.type === "dot") {
+            const circle = document.createElementNS(svgNS, "circle");
+            circle.setAttribute("cx", legendX + 10); circle.setAttribute("cy", y);
+            circle.setAttribute("r", "5"); circle.setAttribute("fill", item.color);
+            svg.appendChild(circle);
+        }
+        
+        const txt = document.createElementNS(svgNS, "text");
+        txt.setAttribute("x", legendX + 30); txt.setAttribute("y", y + 4);
+        txt.setAttribute("class", "legend-text");
+        txt.textContent = item.label;
+        svg.appendChild(txt);
+    });
+
+    document.getElementById("svg-container").appendChild(svg);
+</script>
+</body>
+</html>
